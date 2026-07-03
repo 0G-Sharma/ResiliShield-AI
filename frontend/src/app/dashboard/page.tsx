@@ -53,7 +53,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchTelemetry = async () => {
       try {
-        const response = await fetch('http://localhost:8000/dashboard');
+        const response = await fetch('https://resilishield-ai.onrender.com/dashboard');
         if (response.ok) {
           const data = await response.json();
           setIncidents(data.incidents);
@@ -73,7 +73,7 @@ export default function DashboardPage() {
     let reconnectTimeout: any;
 
     const connectWS = () => {
-      ws = new WebSocket('ws://localhost:8000/ws');
+      ws = new WebSocket('wss://resilishield-ai.onrender.com/ws');
       
       ws.onopen = () => {
         addLog('System', 'Secure Realtime Telemetry WebSocket stream connected.');
