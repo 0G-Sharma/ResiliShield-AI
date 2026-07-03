@@ -363,7 +363,7 @@ def generate_incident_report(payload: ReportRequest, db: Session = Depends(get_d
         "report_id": report_id,
         "incident_id": payload.incident_id,
         "compile_status": "READY_FOR_DOWNLOAD",
-        "download_url": f"http://localhost:8000/reports/{report_id}.{payload.format}",
+        "download_url": f"https://resilishield-ai.onrender.com/reports/{report_id}.{payload.format}",
         "timestamp": datetime.datetime.now().isoformat()
     }
 
