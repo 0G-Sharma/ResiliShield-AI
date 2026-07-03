@@ -1,0 +1,59 @@
+name: CI/CD Pipeline - Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      # Setup GCP Auth (if service account credentials are provided as secrets)
+      - name: Authenticate with Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      # Configure Docker to use gcloud credentials
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      # Build and push Backend to Artifact Registry
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/resilishield/backend:latest ./backend
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/resilishield/backend:latest
+
+      # Build and push Frontend to Artifact Registry
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/resilishield/frontend:latest ./frontend
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/resilishield/frontend:latest
+
+      # Deploy Backend to Google Cloud Run
+      - name: Deploy Backend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: resilishield-backend
+          image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/resilishield/backend:latest
+          region: us-central1
+          flags: '--allow-unauthenticated'
+
+      # Deploy Frontend to Google Cloud Run
+      - name: Deploy Frontend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: resilishield-frontend
+          image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/resilishield/frontend:latest
+          region: us-central1
+          flags: '--allow-unauthenticated'
